@@ -1,3 +1,4 @@
+import argparse
 import os
 import pathlib
 import pickle
@@ -11,7 +12,7 @@ class GridGenerator:
     Generates grid like maps. Allows for generation of new, empty grids as well as loading existing grid and creating a game level info out of it.
     """
 
-    def __init__(self, cell_w, cell_h):
+    def __init__(self, cell_w=None, cell_h=None):
         """
         Initializes the Grid Generator
         :param cell_w: width of a single cell in grid (in pixels)
@@ -29,8 +30,8 @@ class GridGenerator:
             "WATER": {'color': (255, 0, 0), 'info': "blue, for water, swimmable by turtle"},
             "LOOT_CRATE": {'color': (19, 69, 139), 'info': "brown, for loot crates with snails and other edible things"},
             "DEADLY_GROUND": {'color': (0, 0, 255), 'info': "red, for deadly grounds (where turtle dies)"},
-            "CHECKPOINT_GROUND": {'color': (0, 255, 255), 'info': "yellow, for places with checkpoints"}
-            # "EMPTY_CELL": {'color': (255, 255, 255), 'info': "empty cell"}
+            "CHECKPOINT_GROUND": {'color': (0, 255, 255), 'info': "yellow, for places with checkpoints"},
+            "EMPTY_CELL": {'color': (255, 255, 255), 'info': "empty cell"}
         }
 
     def find_color_index(self, rgb_val: tuple):
@@ -41,11 +42,7 @@ class GridGenerator:
         """
         colors = [v['color'] for _, v in self.cell_types.items()]
         try:
-            # todo repair it by adding EMPTY CELL to cell_types
-            if rgb_val == (255, 255, 255):
-                return -1
-            else:
-                return colors.index(rgb_val)
+            return colors.index(rgb_val)
         except KeyError:
             raise Exception("{} not in available cell color types!".format(rgb_val))
 
@@ -121,6 +118,18 @@ class GridGenerator:
         if grid_info is not None:
             pickle.dump(grid_info, open(os.path.join(world_path, 'grid_info.p'), 'wb'))
 
+    def load_world(self, world_name, grid_image_name):
+        """
+        Loads current grid (specified by grid image name) and the corresponding grid info
+        :param world_name: name of the world
+        :param grid_image_name: name of the image with grid
+        :return: grid image, grid info
+        """
+        world_path = os.path.join('world_instances', world_name)
+        grid = cv2.imread(os.path.join(world_path, grid_image_name))
+        grid_info = pickle.load(open(os.path.join(world_path, 'grid_info.p'), 'rb'))
+        return grid, grid_info
+
     def update_grid_info(self, colored_grid, current_info):
         """
         Makes an update of a grid (usually the colored one)
@@ -148,13 +157,38 @@ class GridGenerator:
         return current_info
 
 
-generator = GridGenerator(cell_w=20, cell_h=10)
-grid, grid_info = generator.create_empty_grid(rows=15, cols=20)
-# generator.save_world('world_1', grid, grid_info)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("world_name", help="name of the world")
+    # flags referring to work mode (either create new or update existing grid)
+    parser.add_argument("--create", help="flag | use when you want to create new grid", action="store_true")
+    parser.add_argument("--update", help="flag | use when you want to update information about existing (perhaps colored) grid", action="store_true")
+    parser.add_argument("--rows", help="number of rows in newly created grid (use only with --create)", type=int)
+    parser.add_argument("--cols", help="number of columns in newly created grid (use only with --create)", type=int)
+    parser.add_argument("--w", help="width of a single cell in newly created grid (use only with --create)", type=int)
+    parser.add_argument("--h", help="height of a single cell in newly created grid (use only with --create)", type=int)
+    parser.add_argument("--grid_name", help="name of image with grid to modify (use only with --update)", type=str)
 
-colored_grid = cv2.imread('world_instances/world_1/grid.png')
-generator.update_grid_info(colored_grid, grid_info)
-generator.save_world('world_1', None, grid_info)
+    args = parser.parse_args()
 
-# todo add running from CLI
-# todo make saving/loading more uniform, clean dataflow
+    # at LEAST and at MOST one flat must be provided
+    if args.create and args.update:
+        raise Exception('You must provide either --create or --update flag, not both!')
+    elif not (args.create or args.update):
+        raise Exception('One of --create or --update flags must be provided!')
+    else:
+        # either create new or modify existing grid
+        if args.create:
+            if not all([args.rows, args.cols, args.w, args.h]):
+                raise Exception('All of parameters: --rows, --cols, --w, --h must be provided when --create is used!')
+            else:
+                generator = GridGenerator(cell_w=args.w, cell_h=args.h)
+                grid, grid_info = generator.create_empty_grid(rows=args.rows, cols=args.cols)
+                generator.save_world(args.world_name, grid, grid_info)
+        elif args.update:
+            if not args.grid_name:
+                raise Exception('When --update is used, a --grid_name must be provided!')
+            generator = GridGenerator()
+            grid, grid_info = generator.load_world(args.world_name, args.grid_name)
+            updated_grid_info = generator.update_grid_info(grid, grid_info)
+            generator.save_world(args.world_name, None, grid_info)
