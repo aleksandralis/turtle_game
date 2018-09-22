@@ -1,5 +1,87 @@
 import pickle
 
+import numpy as np
+import pygame
+
+
+class StaticBlock(pygame.sprite.Sprite):
+    """
+    A class for defining a block of "obstacle", like for example block of grass
+    """
+
+    def __init__(self, x, y, units_w, units_h, images, is_deadly):
+        """
+        A base class for static obstacles, like blocks of solid ground, but also for water, lava, spikes etc.
+        :params x, y: coordinates of the origin of block, in pixels
+        :params units_w, units_h: width and height of the block (in units)
+        :param images: a set of images associated with the block. Might contain several images (it's dependent on class children)
+        :param is_deadly: specifies, whether touching the block is deadly for the hero
+        """
+        # Call the parent class (Sprite) constructor
+        super().__init__()
+
+        # specify block params
+        self.is_deadly = is_deadly
+
+        # gets image appropriate for the block and uses it as a block surface
+        block_image = self.get_image(units_w, units_h, images)
+        self.image = pygame.surfarray.make_surface(block_image)
+        self.rect = self.image.get_rect()
+
+        self.set_position(x, y)
+
+    def set_position(self, x, y):
+        """
+        Sets block position
+        :param x: x, in pixels
+        :param y: y, in pixels
+        :return:
+        """
+        self.rect.x = x
+        self.rect.y = y
+
+    def get_image(self, units_w, units_h, images):
+        """Creates an image appropriate for the block"""
+        raise NotImplementedError
+
+    def move_block(self, dx, dy):
+        """
+        Moves block by given pixels. Needed for simulating camera movement
+        :param dx: pixels increment in x axis
+        :param dy: pixels increment in y axis
+        """
+        self.rect.x += dx
+        self.rect.y += dy
+
+
+class BottomBlock(StaticBlock):
+    """
+    A class for defining static objects that are moving the bottom of the screen, therefore usually contains two types of images: a top one and a (possibly repeated) bottom one,
+    connected with the end of the screen
+    """
+
+    def __init__(self, x, y, units_w, units_h, images, is_deadly):
+        super().__init__(x, y, units_w, units_h, images, is_deadly)
+
+    def get_image(self, units_w, units_h, images):
+        top_img = images['top_img']
+        result_img = np.concatenate([top_img] * units_w, axis=1)  # repeat image units_w times
+
+        if units_h > 1:  # a block contains more than one block (must have also a bottom block)
+            bottom_img = images['bottom_img']
+            bottom_img = np.concatenate([bottom_img] * units_w, axis=1)  # repeat image units_w times
+
+            # if there are multiple bottom blocks needed (we already used two of them, one for top block, second for first bottom block)
+            if units_h - 2 > 0:
+                bottom_img = np.concatenate([bottom_img] * (units_w - 2), axis=0)  # repeat image remaining unit_h - 2 times
+
+            # final top and bottom concat
+            result_img = np.concatenate([result_img, bottom_img], axis=0)
+
+        # oddly, pygame images are rotated counterclockwise of 90 degrees
+        result_img = np.rot90(result_img, 1)
+        return result_img
+
 
 class World:
     """
@@ -30,8 +112,6 @@ class World:
         self.cell_h = grid_info['cell_w']
         self.cell_w = grid_info['cell_h']
         self.obj_matrix = grid_info['objects_matrix']
-
-        print(self.obj_matrix)
 
         connected_objects = self.find_connected_components()
         print(connected_objects)
@@ -124,3 +204,36 @@ class World:
 
 
 world = World('world_instances/world_1/grid_info.p')
+
+#
+# SCREENWIDTH = 800
+# SCREENHEIGHT = 600
+#
+# t = cv2.imread('/media/carlo/My Files/DL Playground/turtle_game/source/worlds/assets/grass_block.png')
+# b = cv2.imread('/media/carlo/My Files/DL Playground/turtle_game/source/worlds/assets/dirt_block.png')
+#
+# t = cv2.cvtColor(t, cv2.COLOR_BGR2RGB)
+# b = cv2.cvtColor(b, cv2.COLOR_BGR2RGB)
+#
+# block_images = {'top_img': t, 'bottom_img': b}
+# block = BottomBlock(200, 200, 5, 1, block_images, True)
+#
+# size = (SCREENWIDTH, SCREENHEIGHT)
+# screen = pygame.display.set_mode(size)
+#
+# all_sprites_list = pygame.sprite.Group()
+# all_sprites_list.add(block)
+#
+# carryOn = True
+# clock = pygame.time.Clock()
+#
+# while carryOn:
+#     for event in pygame.event.get():
+#         if event.type == pygame.QUIT:
+#             carryOn = False
+#     all_sprites_list.update()
+#     all_sprites_list.draw(screen)
+#     pygame.display.flip()
+#     clock.tick(60)
+#
+# pygame.quit()
