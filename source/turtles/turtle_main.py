@@ -1,5 +1,5 @@
 import pygame
-from source.turtles.turtle_hero import Turtle
+from source.turtles.turtle_hero import Turtle, Turtle_Hero
 
 SCREENWIDTH = 800
 SCREENHEIGHT = 600
@@ -9,7 +9,7 @@ size = (SCREENWIDTH, SCREENHEIGHT)
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption("Turtle Game")
 
-playerTurtle = Turtle("normal", 0.5, "Karol1",(200,200))
+playerTurtle = Turtle_Hero("normal", 0.5, "Karol1", (200, 200))
 
 # Allowing the user to close the window...
 carryOn = True
@@ -22,6 +22,9 @@ while carryOn:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             carryOn = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE and playerTurtle.is_jumping == 0:
+                playerTurtle.init_jump(400, 800)
 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
@@ -34,7 +37,8 @@ while carryOn:
         playerTurtle.moveDown(5)
 
     all_sprites_list.update()
-
+    if playerTurtle.is_jumping != 0:
+        playerTurtle.jump(400, 800)
     # Drawing on Screen
     screen.fill(GREEN)
     # Now let's draw all the sprites in one go. (For now we only have 1 sprite!)

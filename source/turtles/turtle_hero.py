@@ -1,4 +1,5 @@
 import pygame, random
+
 # Let's import the Car Class
 
 GREEN = (20, 255, 140)
@@ -6,14 +7,21 @@ GREY = (210, 210, 210)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 PURPLE = (255, 0, 255)
-BLACK = (0,0,0)
+BLACK = (0, 0, 0)
 WIDTH = 100
 HEIGHT = 50
+
 
 class Turtle(pygame.sprite.Sprite):
     # This class represents a turtle. It derives from the "Sprite" class in Pygame.
 
     def __init__(self, type, size_coeff, name, position):
+        """
+        :param type:
+        :param size_coeff:
+        :param name:
+        :param position:
+        """
         # Call the parent class (Sprite) constructor
         super().__init__()
 
@@ -52,3 +60,40 @@ class Turtle(pygame.sprite.Sprite):
         self.speed = speed
 
 
+class Turtle_Hero(Turtle):
+    def __init__(self, type, size_coeff, name, position):
+        super().__init__(type, size_coeff, name, position)
+        self.is_jumping = 0
+        self.dist_to_jump = 0
+        self.initial_y = 0
+        self.jump_counter = 0
+
+    def init_jump(self, initial_v, grav_acc):
+        self.is_jumping = 1
+        self.dist_to_jump = (initial_v) ** 2 / (2 * grav_acc)
+        print("init jump")
+        print(self.dist_to_jump)
+        self.initial_y = self.rect.y
+        self.jump_counter = self.jump_counter + 1
+
+    def jump(self, initial_v, grav_acc):
+        if self.is_jumping == 1:
+            self.rect.y = self.initial_y - initial_v * (self.jump_counter / 60) + grav_acc * (self.jump_counter / 60) ** 2 / 2
+            print(self.rect.y)
+            self.jump_counter = self.jump_counter + 1
+            if self.initial_y - self.rect.y >= self.dist_to_jump:
+                self.is_jumping = 2
+                self.jump_counter = 1
+                print("down")
+                self.rect.y = self.initial_y - self.dist_to_jump
+        elif self.initial_y >= self.rect.y and self.is_jumping == 2:
+            self.rect.y = self.initial_y - self.dist_to_jump + grav_acc * (self.jump_counter / 60) ** 2 / 2
+            print(self.rect.y)
+            self.jump_counter = self.jump_counter + 1
+            if self.initial_y <= self.rect.y:
+                self.is_jumping = 0
+                self.dist_to_jump = 0
+                self.rect.y = self.initial_y
+                self.initial_y = 0
+                self.jump_counter = 0
+                print("end")
