@@ -2,6 +2,7 @@ import argparse
 import os
 import pathlib
 import pickle
+from collections import OrderedDict
 
 import cv2
 import numpy as np
@@ -23,16 +24,15 @@ class GridGenerator:
 
         self.world_root = 'world_instances'
 
-        # cell types and associated colours
-        self.cell_types = {
-            "GROUND": {'color': (0, 0, 0), 'info': "black, for solid ground, where turtle can safely walk"},
-            "PLATFORM": {'color': (0, 255, 0), 'info': "green, for hanging platforms, where turtle can safely jump"},
-            "WATER": {'color': (255, 0, 0), 'info': "blue, for water, swimmable by turtle"},
-            "LOOT_CRATE": {'color': (19, 69, 139), 'info': "brown, for loot crates with snails and other edible things"},
-            "DEADLY_GROUND": {'color': (0, 0, 255), 'info': "red, for deadly grounds (where turtle dies)"},
-            "CHECKPOINT_GROUND": {'color': (0, 255, 255), 'info': "yellow, for places with checkpoints"},
-            "EMPTY_CELL": {'color': (255, 255, 255), 'info': "empty cell"}
-        }
+        self.cell_types = OrderedDict([
+            ("GROUND", {'color': (0, 0, 0), 'info': "black, for solid ground, where turtle can safely walk"}),
+            ("PLATFORM", {'color': (0, 255, 0), 'info': "green, for hanging platforms, where turtle can safely jump"}),
+            ("WATER", {'color': (255, 0, 0), 'info': "blue, for water, swimmable by turtle"}),
+            ("LOOT_CRATE", {'color': (19, 69, 139), 'info': "brown, for loot crates with snails and other edible things"}),
+            ("DEADLY_GROUND", {'color': (0, 0, 255), 'info': "red, for deadly grounds (where turtle dies)"}),
+            ("CHECKPOINT_GROUND", {'color': (0, 255, 255), 'info': "yellow, for places with checkpoints"}),
+            ("EMPTY_CELL", {'color': (255, 255, 255), 'info': "empty cell"})
+        ])
 
     def find_color_index(self, rgb_val: tuple):
         """
