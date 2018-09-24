@@ -75,9 +75,9 @@ class BottomBlock(StaticBlock):
             bottom_img = images['bottom_img']
             bottom_img = np.concatenate([bottom_img] * units_w, axis=1)  # repeat image units_w times
 
-            # if there are multiple bottom blocks needed (we already used two of them, one for top block, second for first bottom block)
+            # repeat bottom block units_h - 1 times (because we already have one unit_h for top block)
             if units_h - 2 > 0:
-                bottom_img = np.concatenate([bottom_img] * (units_w - 2), axis=0)  # repeat image remaining unit_h - 2 times
+                bottom_img = np.concatenate([bottom_img] * (units_h - 1), axis=0)  # repeat image remaining unit_h - 2 times
 
             # final top and bottom concat
             result_img = np.concatenate([result_img, bottom_img], axis=0)
@@ -92,11 +92,14 @@ class World:
     Class responsible for drawing world and populating it with static sprites.
     """
 
-    def __init__(self, grid_file_path, cell_types=cell_types):
+    def __init__(self, grid_file_path, screen_w, screen_h, cell_types=cell_types):
         """
         Initializes world.
         :param grid_file_path: the pickle file, describing world (its size and objects matrix)
         """
+        self.__screen_w = screen_w
+        self.__screen_h = screen_h
+
         self.cell_types = {i: k for i, k in enumerate(cell_types.keys())}
         self.cell_type_ids = {v: k for k, v in self.cell_types.items()}
 
@@ -113,6 +116,11 @@ class World:
         self.assets = self.load_assets('assets', [key for key in self.cell_type_ids.keys() if key is not 'EMPTY_CELL'])
 
         self.__sprites = self.make_sprites(connected_objects)
+
+    def find_screen_offset(self, screen_h):
+        """Finds world-screen difference and returns corresponding offset"""
+        dy = screen_h - self.__world_h
+        return dy
 
     def get_sprites(self):
         """Returns a list of sprites of world obstacles"""
@@ -169,21 +177,20 @@ class World:
 
     def make_sprites(self, connected_objects):
         """Creates pygame sprites from list of connected components, transforming them from unitary units into pixels"""
+        # compute screen offset
+        dy = self.find_screen_offset(self.__screen_h)
+
         all_sprites = pygame.sprite.Group()
-        for obj in connected_objects:
+        for i, obj in enumerate(connected_objects):
             asset = self.assets[obj['type']]
             x = obj['x'] * self.__cell_w
             y = obj['y'] * self.__cell_h
 
             # if bottom-expandable asset
-            print(asset['images'].keys())
-            if 'bottom_img' in asset['images'].keys():  #
-                sprite = BottomBlock(x, y, obj['width'], obj['height'], asset['images'], asset['deadly'])
-                print('sadsadsa')
+            if 'bottom_img' in asset['images'].keys():
+                sprite = BottomBlock(x, y + dy, obj['width'], obj['height'], asset['images'], asset['deadly'])
                 all_sprites.add(sprite)
 
-            break
-        print(all_sprites)
         return all_sprites
 
     def find_vertically_connected(self, matrix, background_idx):
@@ -275,20 +282,14 @@ class World:
         return connected_list
 
 
-world = World('world_instances/world_1/grid_info.p')
+SCREENWIDTH = 800
+SCREENHEIGHT = 100
+
+world = World('world_instances/world_1/grid_info.p', SCREENWIDTH, SCREENHEIGHT)
 sprites = world.get_sprites()
 
-SCREENWIDTH = 800
-SCREENHEIGHT = 600
-
-# block_images = {'top_img': t, 'bottom_img': b}
-# block = BottomBlock(200, 200, 5, 1, block_images, True)
-#
 size = (SCREENWIDTH, SCREENHEIGHT)
 screen = pygame.display.set_mode(size)
-
-# all_sprites_list = pygame.sprite.Group()
-# all_sprites_list.add(block)
 
 carryOn = True
 clock = pygame.time.Clock()
