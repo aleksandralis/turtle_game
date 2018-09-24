@@ -41,8 +41,12 @@ class Turtle(pygame.sprite.Sprite):
 
         # Fetch the rectangle object that has the dimensions of the image and set position.
         self.rect = self.image.get_rect()
-        self.rect.x = position[0]
+        self.rect.x = float(position[0])
+        self.tmp_x_float = float(position[0])
         self.rect.y = position[1]
+        self.moving = 0
+        self.speed_act = 0
+        self.speed_target = 0
 
     def moveRight(self, pixels):
         self.rect.x += pixels
@@ -59,6 +63,39 @@ class Turtle(pygame.sprite.Sprite):
     def changeSpeed(self, speed):
         self.speed = speed
 
+    def init_move_right(self):
+        self.speed_target = 150
+
+    def init_move_fast_right(self):
+        self.speed_target = 300
+
+    def init_move_left(self):
+        self.speed_target = -150
+
+    def init_move_fast_left(self):
+        self.speed_target = -300
+
+    def stop_move(self):
+        self.speed_target = 0
+
+    def move(self):
+        if self.speed_target == round(self.speed_act,1):
+            self.tmp_x_float = self.rect.x + self.speed_target * (1.0/60.0)
+            self.rect.x = self.tmp_x_float + 0.5
+            print("const")
+        elif self.speed_target>self.speed_act:
+            print("speed up")
+            self.tmp_x_float = self.rect.x + self.speed_act * (1.0/60) + 150 *(1.0/60.0)**2/2
+            self.speed_act = self.speed_act + 150*(1/60)
+            self.rect.x = self.tmp_x_float + 0.5
+        elif self.speed_target<self.speed_act:
+            print("speed down")
+            self.tmp_x_float = self.rect.x + self.speed_act * (1/60) - 150 *(1/60)**2/2
+            self.speed_act = self.speed_act - 150*(1/60)
+            self.rect.x = self.tmp_x_float + 0.5
+        if self.speed_act < 0.01 and self.speed_act > -0.01:
+            self.speed_act = 0.0
+        print("actual " + str(self.speed_act), "target " + str(self.speed_target))
 
 class Turtle_Hero(Turtle):
     def __init__(self, type, size_coeff, name, position):
