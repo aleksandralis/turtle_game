@@ -102,17 +102,21 @@ class World:
 
         grid_info = pickle.load(open(grid_file_path, "rb"))
 
-        self.world_h = grid_info['img_h']
-        self.world_w = grid_info['img_w']
-        self.cell_h = grid_info['cell_h']
-        self.cell_w = grid_info['cell_w']
-        self.obj_matrix = grid_info['objects_matrix']
+        self.__world_h = grid_info['img_h']
+        self.__world_w = grid_info['img_w']
+        self.__cell_h = grid_info['cell_h']
+        self.__cell_w = grid_info['cell_w']
+        self.__obj_matrix = grid_info['objects_matrix']
 
         connected_objects = self.find_connected_components()
 
         self.assets = self.load_assets('assets', [key for key in self.cell_type_ids.keys() if key is not 'EMPTY_CELL'])
 
-        # self.make_sprites(connected_objects)
+        self.__sprites = self.make_sprites(connected_objects)
+
+    def get_sprites(self):
+        """Returns a list of sprites of world obstacles"""
+        return self.__sprites
 
     def load_assets(self, path, cell_names):
         """
@@ -140,13 +144,15 @@ class World:
                 raise Exception("There are no assets associated to {}!".format(cell_name))
 
             # assign images to assets
+            images = {}
             for asset_name in associated_filenames:
                 # preprocess image (load, scale, bgr to rgb color conversion)
                 img = cv2.imread(os.path.join(path, asset_name))
-                img = cv2.resize(img, (self.cell_w, self.cell_h))
+                img = cv2.resize(img, (self.__cell_w, self.__cell_h))
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
                 if 'top' in asset_name:
-                    asset_info['top'] = img
+                    images['top_img'] = img
 
                     # assign another features
                     asset_info['deadly'] = True if 'deadly' in asset_name else False
@@ -155,18 +161,30 @@ class World:
                     asset_info['maskable'] = True if 'maskable' in asset_name else False
 
                 elif 'bottom' in asset_name:
-                    asset_info['bottom'] = img
+                    images['bottom_img'] = img
+                asset_info['images'] = images
             assets[cell_name] = asset_info
 
         return assets
 
-    # def make_sprites(self, connected_objects):
-    #     """Creates pygame sprites from list of connected components, transforming them from unitary units into pixels"""
-    #
-    #     for obj in connected_objects:
-    #         print(obj)
-    #         break
+    def make_sprites(self, connected_objects):
+        """Creates pygame sprites from list of connected components, transforming them from unitary units into pixels"""
+        all_sprites = pygame.sprite.Group()
+        for obj in connected_objects:
+            asset = self.assets[obj['type']]
+            x = obj['x'] * self.__cell_w
+            y = obj['y'] * self.__cell_h
 
+            # if bottom-expandable asset
+            print(asset['images'].keys())
+            if 'bottom_img' in asset['images'].keys():  #
+                sprite = BottomBlock(x, y, obj['width'], obj['height'], asset['images'], asset['deadly'])
+                print('sadsadsa')
+                all_sprites.add(sprite)
+
+            break
+        print(all_sprites)
+        return all_sprites
 
     def find_vertically_connected(self, matrix, background_idx):
         """
@@ -252,37 +270,36 @@ class World:
         Finds connected components of rectangular shape
         :return: list of connected objects
         """
-        vertically_connected = self.find_vertically_connected(self.obj_matrix, self.cell_type_ids['EMPTY_CELL'])
+        vertically_connected = self.find_vertically_connected(self.__obj_matrix, self.cell_type_ids['EMPTY_CELL'])
         connected_list = self.find_horizontally_connected(vertically_connected)
         return connected_list
 
 
 world = World('world_instances/world_1/grid_info.p')
+sprites = world.get_sprites()
 
-#
-# SCREENWIDTH = 800
-# SCREENHEIGHT = 600
-#
-#
+SCREENWIDTH = 800
+SCREENHEIGHT = 600
+
 # block_images = {'top_img': t, 'bottom_img': b}
 # block = BottomBlock(200, 200, 5, 1, block_images, True)
 #
-# size = (SCREENWIDTH, SCREENHEIGHT)
-# screen = pygame.display.set_mode(size)
-#
+size = (SCREENWIDTH, SCREENHEIGHT)
+screen = pygame.display.set_mode(size)
+
 # all_sprites_list = pygame.sprite.Group()
 # all_sprites_list.add(block)
-#
-# carryOn = True
-# clock = pygame.time.Clock()
-#
-# while carryOn:
-#     for event in pygame.event.get():
-#         if event.type == pygame.QUIT:
-#             carryOn = False
-#     all_sprites_list.update()
-#     all_sprites_list.draw(screen)
-#     pygame.display.flip()
-#     clock.tick(60)
-#
-# pygame.quit()
+
+carryOn = True
+clock = pygame.time.Clock()
+
+while carryOn:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            carryOn = False
+    sprites.update()
+    sprites.draw(screen)
+    pygame.display.flip()
+    clock.tick(60)
+
+pygame.quit()
