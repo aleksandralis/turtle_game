@@ -1,7 +1,11 @@
+import cv2
+import os
 import pickle
 
 import numpy as np
 import pygame
+
+from source.worlds.grid_generator import cell_types
 
 
 class StaticBlock(pygame.sprite.Sprite):
@@ -88,33 +92,81 @@ class World:
     Class responsible for drawing world and populating it with static sprites.
     """
 
-    def __init__(self, grid_file_path):
+    def __init__(self, grid_file_path, cell_types=cell_types):
         """
         Initializes world.
         :param grid_file_path: the pickle file, describing world (its size and objects matrix)
         """
-        self.cell_types = {
-            0: 'GROUND',
-            1: 'PLATFORM',
-            2: 'WATER',
-            3: 'LOOT_CRATE',
-            4: 'DEADLY_GROUND',
-            5: 'CHECKPOINT_GROUND',
-            6: 'EMPTY_CELL'
-        }
-
+        self.cell_types = {i: k for i, k in enumerate(cell_types.keys())}
         self.cell_type_ids = {v: k for k, v in self.cell_types.items()}
 
         grid_info = pickle.load(open(grid_file_path, "rb"))
 
         self.world_h = grid_info['img_h']
         self.world_w = grid_info['img_w']
-        self.cell_h = grid_info['cell_w']
-        self.cell_w = grid_info['cell_h']
+        self.cell_h = grid_info['cell_h']
+        self.cell_w = grid_info['cell_w']
         self.obj_matrix = grid_info['objects_matrix']
 
         connected_objects = self.find_connected_components()
-        print(connected_objects)
+
+        self.assets = self.load_assets('assets', [key for key in self.cell_type_ids.keys() if key is not 'EMPTY_CELL'])
+
+        # self.make_sprites(connected_objects)
+
+    def load_assets(self, path, cell_names):
+        """
+        Loads assets for cell types, based on names; assigning additional information to them. Each asset must be named according to rules:
+        NAME-MODE-FEATURE1-FEATURE2-FEATUREn.png. Also does all neccessary preprocessing, like resizing etc.
+
+        NAME - specifies the name of type, like ground, deadly ground etc.
+        MODE - TOP / BOTTOM, specifies type of block (for example top block of grass and bottom block of dirt), all blocks must have at least their top version
+        FEATURE - available from list: DEADLY (specifies, wheter the block is deadly in touch), TRANSPARENT (specifies, whether the block should be transparent),
+                PHYSICAL - wheter the object should react with the turtle (for example water shouldn't, turtle should go through it),
+                MASKABLE - wheter a mask should be created
+
+        :param path: path to root directory of assets
+        :param cell_types: dictionary with types
+        :return: dict {cell_name: assets}
+        """
+        assets = {}
+        filenames = os.listdir(path)
+        for cell_name in cell_names:
+            asset_info = {}
+
+            # find all assets associated to the cell type
+            associated_filenames = [name for name in filenames if name.startswith(cell_name.lower())]
+            if not associated_filenames:  # all cell types must have the associated assets!
+                raise Exception("There are no assets associated to {}!".format(cell_name))
+
+            # assign images to assets
+            for asset_name in associated_filenames:
+                # preprocess image (load, scale, bgr to rgb color conversion)
+                img = cv2.imread(os.path.join(path, asset_name))
+                img = cv2.resize(img, (self.cell_w, self.cell_h))
+
+                if 'top' in asset_name:
+                    asset_info['top'] = img
+
+                    # assign another features
+                    asset_info['deadly'] = True if 'deadly' in asset_name else False
+                    asset_info['transparent'] = True if 'transparent' in asset_name else False
+                    asset_info['physical'] = True if 'physical' in asset_name else False
+                    asset_info['maskable'] = True if 'maskable' in asset_name else False
+
+                elif 'bottom' in asset_name:
+                    asset_info['bottom'] = img
+            assets[cell_name] = asset_info
+
+        return assets
+
+    # def make_sprites(self, connected_objects):
+    #     """Creates pygame sprites from list of connected components, transforming them from unitary units into pixels"""
+    #
+    #     for obj in connected_objects:
+    #         print(obj)
+    #         break
+
 
     def find_vertically_connected(self, matrix, background_idx):
         """
@@ -165,12 +217,14 @@ class World:
         temporary_objects = []  # objects that may not be yet fully connected
 
         for objects in objects_in_columns:  # iterate over columns
-            x = objects[0]['x']  # not every column contained objects, so we need to extract its x position
+            x = objects[0]['x']  # not every column must contain objects, so we need to extract its x position
 
             # for all objects in the single column
             for obj in objects:
                 # there should be at most one, however I use list comprehension for readability (also for convenient None check later)
-                matching_objects = [temp_obj for temp_obj in temporary_objects if temp_obj['y'] == obj['y'] and temp_obj['height'] == obj['height']]
+                matching_objects = [temp_obj for temp_obj in temporary_objects if temp_obj['y'] == obj['y']
+                                    and temp_obj['height'] == obj['height']
+                                    and temp_obj['type'] == obj['type']]
 
                 if matching_objects:  # if adjacent object was found
                     updated_object = matching_objects[0]
@@ -184,10 +238,10 @@ class World:
 
             # cleaning the temporary list, if it's not empty
             if temporary_objects:
-                inactive_objects = [obj for obj in temporary_objects if obj['x'] + obj['width'] < x]  # these objects are already finished
+                inactive_objects = [obj for obj in temporary_objects if obj['x'] + obj['width'] < x + 1]  # these objects are already finished
                 connected_objects.extend(inactive_objects)
 
-                temporary_objects = [obj for obj in temporary_objects if not (obj['x'] + obj['width'] < x)]  # these objects are still active
+                temporary_objects = [obj for obj in temporary_objects if obj not in inactive_objects]  # these objects are still active
 
         # move last object from temporary list to list of connected objects
         connected_objects.extend(temporary_objects)
@@ -209,11 +263,6 @@ world = World('world_instances/world_1/grid_info.p')
 # SCREENWIDTH = 800
 # SCREENHEIGHT = 600
 #
-# t = cv2.imread('/media/carlo/My Files/DL Playground/turtle_game/source/worlds/assets/grass_block.png')
-# b = cv2.imread('/media/carlo/My Files/DL Playground/turtle_game/source/worlds/assets/dirt_block.png')
-#
-# t = cv2.cvtColor(t, cv2.COLOR_BGR2RGB)
-# b = cv2.cvtColor(b, cv2.COLOR_BGR2RGB)
 #
 # block_images = {'top_img': t, 'bottom_img': b}
 # block = BottomBlock(200, 200, 5, 1, block_images, True)
