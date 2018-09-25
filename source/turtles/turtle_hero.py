@@ -82,14 +82,14 @@ class Turtle(pygame.sprite.Sprite):
         if self.speed_target == round(self.speed_act,1):
             self.tmp_x_float = self.rect.x + self.speed_target * (1.0/60.0)
             self.rect.x = self.tmp_x_float + 0.5
-            print("const")
+            #print("const")
         elif self.speed_target>self.speed_act:
-            print("speed up")
+            #print("speed up")
             self.tmp_x_float = self.rect.x + self.speed_act * (1.0/60) + 150 *(1.0/60.0)**2/2
             self.speed_act = self.speed_act + 150*(1/60)
             self.rect.x = self.tmp_x_float + 0.5
         elif self.speed_target<self.speed_act:
-            print("speed down")
+            #print("speed down")
             self.tmp_x_float = self.rect.x + self.speed_act * (1/60) - 150 *(1/60)**2/2
             self.speed_act = self.speed_act - 150*(1/60)
             self.rect.x = self.tmp_x_float + 0.5

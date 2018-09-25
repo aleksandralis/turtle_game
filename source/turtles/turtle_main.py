@@ -26,13 +26,26 @@ while carryOn:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE and playerTurtle.is_jumping == 0:
                 playerTurtle.init_jump(400, 800)
-            if event.key == pygame.K_RIGHT and not keys2[pygame.KMOD_CTRL]:
+            if event.key == pygame.K_RIGHT and not keys2[pygame.K_RCTRL]:
+                print("init right !!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 playerTurtle.init_move_right()
-            elif event.key == pygame.K_RIGHT and keys2[pygame.KMOD_CTRL]:
+            elif event.key == pygame.K_RIGHT and keys2[pygame.K_RCTRL]:
+                print("init fast right!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1")
                 playerTurtle.init_move_fast_right()
+            elif event.key == pygame.K_LEFT and keys2[pygame.K_RCTRL]:
+                playerTurtle.init_move_fast_left()
+            elif event.key == pygame.K_LEFT and not keys2[pygame.K_RCTRL]:
+                playerTurtle.init_move_left()
+            elif event.key == pygame.K_RCTRL and keys2[pygame.K_RIGHT]:
+                playerTurtle.init_move_fast_right()
+            elif event.key == pygame.K_RCTRL and keys2[pygame.K_LEFT]:
+                playerTurtle.init_move_fast_left()
+
         elif event.type == pygame.KEYUP:
-            if event.key == pygame.KMOD_CTRL and keys2[pygame.K_RIGHT]:
+            if event.key == pygame.K_RCTRL and keys2[pygame.K_RIGHT]:
                 playerTurtle.init_move_right()
+            elif event.key == pygame.K_RCTRL and keys2[pygame.K_LEFT]:
+                playerTurtle.init_move_left()
 
     keys = pygame.key.get_pressed()
     #if keys[pygame.K_LEFT]:
@@ -43,7 +56,7 @@ while carryOn:
         playerTurtle.moveUp(5)
     if keys[pygame.K_DOWN]:
         playerTurtle.moveDown(5)
-    if not keys[pygame.K_RIGHT] and not keys[pygame.KMOD_CTRL]:
+    if not keys[pygame.K_RIGHT] and not keys[pygame.KMOD_CTRL] and not keys[pygame.K_LEFT]:
         playerTurtle.stop_move()
 
     all_sprites_list.update()
