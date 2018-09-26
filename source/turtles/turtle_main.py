@@ -1,5 +1,5 @@
 import pygame
-from source.turtles.turtle_hero import Turtle, Turtle_Hero
+from source.turtles.turtle_hero import Turtle, TurtleHero
 
 SCREENWIDTH = 800
 SCREENHEIGHT = 600
@@ -9,7 +9,7 @@ size = (SCREENWIDTH, SCREENHEIGHT)
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption("Turtle Game")
 
-playerTurtle = Turtle_Hero("normal", 0.5, "Karol1", (200, 200))
+playerTurtle = TurtleHero("normal", 0.5, "Karol1", (200, 200))
 
 # Allowing the user to close the window...
 carryOn = True
@@ -30,7 +30,7 @@ while carryOn:
                 print("init right !!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 playerTurtle.init_move_right()
             elif event.key == pygame.K_RIGHT and keys2[pygame.K_RCTRL]:
-                print("init fast right!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1")
+                print("init fast right!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 playerTurtle.init_move_fast_right()
             elif event.key == pygame.K_LEFT and keys2[pygame.K_RCTRL]:
                 playerTurtle.init_move_fast_left()
@@ -53,9 +53,9 @@ while carryOn:
     #if keys[pygame.K_RIGHT]:
         #playerTurtle.moveRight(5)
     if keys[pygame.K_UP]:
-        playerTurtle.moveUp(5)
+        playerTurtle.move_up(5)
     if keys[pygame.K_DOWN]:
-        playerTurtle.moveDown(5)
+        playerTurtle.move_down(5)
     if not keys[pygame.K_RIGHT] and not keys[pygame.KMOD_CTRL] and not keys[pygame.K_LEFT]:
         playerTurtle.stop_move()
 
