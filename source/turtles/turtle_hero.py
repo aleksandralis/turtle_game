@@ -1,4 +1,9 @@
 import pygame, random
+from enum import Enum
+class JumpStates(Enum):
+    IDLE = 0
+    UP = 1
+    DOWN = 2
 
 class Turtle(pygame.sprite.Sprite):
     # This class represents a turtle. It derives from the "Sprite" class in Pygame.
@@ -60,7 +65,7 @@ class TurtleHero(Turtle):
         self.TICK = 1 / 60.0
         self.SPEED_FAST = 300
         self.SPPED_SLOW = 150
-        self.is_jumping = 0 #jumping state machine: 0 - no jumping, 1 - jump up, 2 - jump down
+        self.is_jumping = JumpStates.IDLE #jumping state machine: 0 - no jumping, 1 - jump up, 2 - jump down
         self.dist_to_jump = 0
         self.initial_y = 0
         self.jump_counter = 0
@@ -70,7 +75,7 @@ class TurtleHero(Turtle):
         self.speed_target = 0
 
     def init_jump(self, initial_v, grav_acc):
-        self.is_jumping = 1
+        self.is_jumping = JumpStates.UP
         self.dist_to_jump = (initial_v) ** 2 / (2 * grav_acc)
         print("init jump")
         print(self.dist_to_jump)
@@ -103,7 +108,7 @@ class TurtleHero(Turtle):
             self.tmp_x_float = self.rect.x + self.speed_act * (self.TICK) + self.ACC *(self.TICK)**2/2
             self.speed_act = self.speed_act + self.ACC *(self.TICK)
             self.rect.x = self.tmp_x_float + 0.5
-        elif self.speed_target < self.speed_act: #uniformly deleted motion
+        elif self.speed_target < self.speed_act: #uniformly deccelerated motion
             self.tmp_x_float = self.rect.x + self.speed_act * (self.TICK) - self.ACC *(self.TICK)**2/2
             self.speed_act = self.speed_act - self.ACC*(self.TICK)
             self.rect.x = self.tmp_x_float + 0.5
@@ -112,21 +117,21 @@ class TurtleHero(Turtle):
         print("actual " + str(self.speed_act), "target " + str(self.speed_target))
 
     def jump(self, initial_v, grav_acc):
-        if self.is_jumping == 1:
+        if self.is_jumping == JumpStates.UP:
             self.rect.y = self.initial_y - initial_v * (self.jump_counter * self.TICK) + grav_acc * (self.jump_counter * self.TICK) ** 2 / 2
             print(self.rect.y)
             self.jump_counter = self.jump_counter + 1
             if self.initial_y - self.rect.y >= self.dist_to_jump:
-                self.is_jumping = 2
+                self.is_jumping = JumpStates.DOWN
                 self.jump_counter = 1
                 print("down")
                 self.rect.y = self.initial_y - self.dist_to_jump
-        elif self.initial_y >= self.rect.y and self.is_jumping == 2:
+        elif self.initial_y >= self.rect.y and self.is_jumping == JumpStates.DOWN:
             self.rect.y = self.initial_y - self.dist_to_jump + grav_acc * (self.jump_counter * self.TICK) ** 2 / 2
             print(self.rect.y)
             self.jump_counter = self.jump_counter + 1
             if self.initial_y <= self.rect.y:
-                self.is_jumping = 0
+                self.is_jumping = JumpStates.IDLE
                 self.dist_to_jump = 0
                 self.rect.y = self.initial_y
                 self.initial_y = 0

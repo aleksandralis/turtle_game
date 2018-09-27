@@ -1,5 +1,5 @@
 import pygame
-from source.turtles.turtle_hero import Turtle, TurtleHero
+from source.turtles.turtle_hero import Turtle, TurtleHero, JumpStates
 
 SCREENWIDTH = 800
 SCREENHEIGHT = 600
@@ -24,7 +24,7 @@ while carryOn:
         if event.type == pygame.QUIT:
             carryOn = False
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE and playerTurtle.is_jumping == 0:
+            if event.key == pygame.K_SPACE and playerTurtle.is_jumping == JumpStates.IDLE:
                 playerTurtle.init_jump(400, 800)
             if event.key == pygame.K_RIGHT and not keys2[pygame.K_RCTRL]:
                 print("init right !!!!!!!!!!!!!!!!!!!!!!!!!!!!")
@@ -60,7 +60,7 @@ while carryOn:
         playerTurtle.stop_move()
 
     all_sprites_list.update()
-    if playerTurtle.is_jumping != 0:
+    if playerTurtle.is_jumping != JumpStates.IDLE:
         playerTurtle.jump(400, 800)
 
     if playerTurtle.speed_act != 0 or playerTurtle.speed_target != 0:
