@@ -25,25 +25,29 @@ class Turtle(pygame.sprite.Sprite):
         self.BLACK = (0, 0, 0)
         self.WIDTH = 100
         self.HEIGHT = 50
+
         # Pass in the name of the turtle, type, size, and its x and y position
         # Set the background color and set it to be transparent
         self.name = name
-        self.image = pygame.Surface([self.WIDTH * size_coeff, self.HEIGHT * size_coeff])
-        self.image.fill(self.WHITE)
-        self.image.set_colorkey(self.WHITE)
+        self.image = self.get_image(position[0], position[1], self.WIDTH, self.HEIGHT)#pygame.Surface([self.WIDTH * size_coeff, self.HEIGHT * size_coeff])
+        # self.image.fill(self.WHITE)
+        # self.image.set_colorkey(self.WHITE)
 
         self.size = size_coeff
         self.type = type
         # Draw the turtle (a rectangle!)
-        pygame.draw.rect(self.image, self.BLACK, [0, 0, self.WIDTH * size_coeff, self.HEIGHT * size_coeff])
+        #pygame.draw.rect(self.image, self.BLACK, [0, 0, self.WIDTH * size_coeff, self.HEIGHT * size_coeff])
         # Instead we could load a proper picture of a turtle...
-        # self.image = pygame.image.load("turtle.png").convert_alpha()
+        #self.image = pygame.image.load("turtle.png").convert_alpha()
 
         # Fetch the rectangle object that has the dimensions of the image and set position.
         self.rect = self.image.get_rect()
         self.rect.x = float(position[0])
         self.tmp_x_float = float(position[0])
         self.rect.y = position[1]
+
+    def get_image(self, x, y, w, h):
+        raise NotImplementedError
 
     def move_right(self, pixels):
         self.rect.x += pixels
@@ -73,6 +77,17 @@ class TurtleHero(Turtle):
         self.speed = 0
         self.speed_act = 0
         self.speed_target = 0
+        #####animation#########
+        self.WIDTH = 150
+        self.HIGHT = 150
+        self.INIT_X = 0
+        self.INIT_Y = 0
+        # self.image_sheet = pygame.image.load('D:\\Users\\Ola\\PycharmProjects\\turtle_game\\source\\turtles\\sv_turtle_sheet.png').convert_alpha()
+        # self.image = self.image_sheet.subsurface((self.INIT_X, self.INIT_Y, self.WIDTH, self.HIGHT))
+
+    def get_image(self, x, y, w, h):
+        image_sheet = pygame.image.load('D:\\Users\\Ola\\PycharmProjects\\turtle_game\\source\\turtles\\sv_turtle_sheet.png').convert_alpha()
+        return image_sheet.subsurface((x, y, w, h))
 
     def init_jump(self, initial_v, grav_acc):
         self.is_jumping = JumpStates.UP
