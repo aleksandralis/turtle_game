@@ -46,7 +46,8 @@ class StaticBlock(pygame.sprite.Sprite):
 
     def get_image(self, units_w, units_h, images):
         """Creates an image appropriate for the block"""
-        raise NotImplementedError
+        # idk why, but normal images are rotated 90deg in pygame, so we need to reverse this process
+        return np.rot90(images['top_img'], 1)
 
     def move_block(self, dx, dy):
         """
@@ -56,7 +57,6 @@ class StaticBlock(pygame.sprite.Sprite):
         """
         self.rect.x += dx
         self.rect.y += dy
-
 
 class BottomBlock(StaticBlock):
     """
@@ -116,6 +116,11 @@ class World:
         self.assets = self.load_assets('assets', [key for key in self.cell_type_ids.keys() if key is not 'EMPTY_CELL'])
 
         self.__sprites = self.make_sprites(connected_objects)
+
+    def move_world(self, dx, dy):
+        """Moves world by dx and dy pixels"""
+        for sprite in self.__sprites:
+            sprite.move_block(dx, dy)
 
     def find_screen_offset(self, screen_h):
         """Finds world-screen difference and returns corresponding offset"""
@@ -190,7 +195,9 @@ class World:
             if 'bottom_img' in asset['images'].keys():
                 sprite = BottomBlock(x, y + dy, obj['width'], obj['height'], asset['images'], asset['deadly'])
                 all_sprites.add(sprite)
-
+            else:
+                sprite = StaticBlock (x, y + dy, obj['width'], obj['height'], asset['images'], asset['deadly'])
+                all_sprites.add(sprite)
         return all_sprites
 
     def find_vertically_connected(self, matrix, background_idx):
@@ -282,8 +289,8 @@ class World:
         return connected_list
 
 
-SCREENWIDTH = 800
-SCREENHEIGHT = 100
+SCREENWIDTH = 1200
+SCREENHEIGHT = 750
 
 world = World('world_instances/world_1/grid_info.p', SCREENWIDTH, SCREENHEIGHT)
 sprites = world.get_sprites()
@@ -298,6 +305,8 @@ while carryOn:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             carryOn = False
+    screen.fill((0, 0, 0))
+    world.move_world(-1,0)
     sprites.update()
     sprites.draw(screen)
     pygame.display.flip()
