@@ -288,28 +288,30 @@ class World:
         connected_list = self.find_horizontally_connected(vertically_connected)
         return connected_list
 
+# >>>>>>>>>>>>>>>>> only for testing!!! todo remove
+if __name__ == '__main__':
+    SCREENWIDTH = 1200
+    SCREENHEIGHT = 750
 
-SCREENWIDTH = 1200
-SCREENHEIGHT = 750
+    world = World('world_instances/world_1/grid_info.p', SCREENWIDTH, SCREENHEIGHT)
+    sprites = world.get_sprites()
 
-world = World('world_instances/world_1/grid_info.p', SCREENWIDTH, SCREENHEIGHT)
-sprites = world.get_sprites()
+    size = (SCREENWIDTH, SCREENHEIGHT)
+    screen = pygame.display.set_mode(size)
 
-size = (SCREENWIDTH, SCREENHEIGHT)
-screen = pygame.display.set_mode(size)
+    carryOn = True
+    clock = pygame.time.Clock()
 
-carryOn = True
-clock = pygame.time.Clock()
+    while carryOn:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                carryOn = False
+        screen.fill((0, 0, 0))
+        world.move_world(-1,0)
+        sprites.update()
+        sprites.draw(screen)
+        pygame.display.flip()
+        clock.tick(60)
 
-while carryOn:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            carryOn = False
-    screen.fill((0, 0, 0))
-    world.move_world(-1,0)
-    sprites.update()
-    sprites.draw(screen)
-    pygame.display.flip()
-    clock.tick(60)
-
-pygame.quit()
+    pygame.quit()
+# >>>>>>>>>>>>>>>>> only for testing!!!
