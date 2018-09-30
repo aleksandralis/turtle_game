@@ -9,7 +9,7 @@ size = (SCREENWIDTH, SCREENHEIGHT)
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption("Turtle Game")
 
-playerTurtle = TurtleHero("normal", 0.5, "Karol1", (100, 100))
+playerTurtle = TurtleHero("normal", 0.5, "Karol1", (0, 0))
 
 # Allowing the user to close the window...
 carryOn = True
@@ -17,6 +17,7 @@ clock = pygame.time.Clock()
 
 all_sprites_list = pygame.sprite.Group()
 all_sprites_list.add(playerTurtle)
+
 
 while carryOn:
     for event in pygame.event.get():

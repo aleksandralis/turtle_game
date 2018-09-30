@@ -1,5 +1,6 @@
 import pygame, random
 from enum import Enum
+import math
 class JumpStates(Enum):
     IDLE = 0
     UP = 1
@@ -23,11 +24,11 @@ class Turtle(pygame.sprite.Sprite):
         self.RED = (255, 0, 0)
         self.PURPLE = (255, 0, 255)
         self.BLACK = (0, 0, 0)
-        self.WIDTH = 100
-        self.HEIGHT = 50
+        self.WIDTH = 64
+        self.HEIGHT = 64
 
         # Pass in the name of the turtle, type, size, and its x and y position
-        # Set the background color and set it to be transparent
+        # Set the background color and st it to be transparent
         self.name = name
         self.image = self.get_image(position[0], position[1], self.WIDTH, self.HEIGHT)#pygame.Surface([self.WIDTH * size_coeff, self.HEIGHT * size_coeff])
         # self.image.fill(self.WHITE)
@@ -64,6 +65,7 @@ class Turtle(pygame.sprite.Sprite):
 
 class TurtleHero(Turtle):
     def __init__(self, type, size_coeff, name, position):
+        self.image_sheet = pygame.image.load('D:\\Users\\Ola\\PycharmProjects\\turtle_game\\source\\turtles\\sv_turtle_sheet.png').convert_alpha()
         super().__init__(type, size_coeff, name, position)
         self.ACC = 600
         self.TICK = 1 / 60.0
@@ -77,17 +79,13 @@ class TurtleHero(Turtle):
         self.speed = 0
         self.speed_act = 0
         self.speed_target = 0
-        #####animation#########
-        self.WIDTH = 150
-        self.HIGHT = 150
-        self.INIT_X = 0
-        self.INIT_Y = 0
-        # self.image_sheet = pygame.image.load('D:\\Users\\Ola\\PycharmProjects\\turtle_game\\source\\turtles\\sv_turtle_sheet.png').convert_alpha()
-        # self.image = self.image_sheet.subsurface((self.INIT_X, self.INIT_Y, self.WIDTH, self.HIGHT))
+        ######animation##########
+        self.walk_r = [(6,0), (7,0), (8,0)]
+        self.i_count = 0
+
 
     def get_image(self, x, y, w, h):
-        image_sheet = pygame.image.load('D:\\Users\\Ola\\PycharmProjects\\turtle_game\\source\\turtles\\sv_turtle_sheet.png').convert_alpha()
-        return image_sheet.subsurface((x, y, w, h))
+        return self.image_sheet.subsurface((x, y, w, h))
 
     def init_jump(self, initial_v, grav_acc):
         self.is_jumping = JumpStates.UP
@@ -130,6 +128,7 @@ class TurtleHero(Turtle):
         if self.speed_act < 0.01 and self.speed_act > -0.01: #if zero (precision 0.1) - stop entirely
             self.speed_act = 0.0
         print("actual " + str(self.speed_act), "target " + str(self.speed_target))
+        self.update_walk_right(4)
 
     def jump(self, initial_v, grav_acc):
         if self.is_jumping == JumpStates.UP:
@@ -152,3 +151,8 @@ class TurtleHero(Turtle):
                 self.initial_y = 0
                 self.jump_counter = 0
                 print("end")
+
+    def update_walk_right(self, iter):
+        count = self.i_count//iter
+        self.image = self.get_image(self.walk_r[count][0]*self.WIDTH, self.walk_r[count][1]*self.HEIGHT,self.WIDTH,self.HEIGHT)
+        self.i_count = (self.i_count + 1)%len(self.walk_r*iter)
