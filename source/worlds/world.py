@@ -39,7 +39,6 @@ class StaticBlock(pygame.sprite.Sprite):
         Sets block position
         :param x: x, in pixels
         :param y: y, in pixels
-        :return:
         """
         self.rect.x = x
         self.rect.y = y
@@ -57,6 +56,7 @@ class StaticBlock(pygame.sprite.Sprite):
         """
         self.rect.x += dx
         self.rect.y += dy
+
 
 class BottomBlock(StaticBlock):
     """
@@ -196,7 +196,7 @@ class World:
                 sprite = BottomBlock(x, y + dy, obj['width'], obj['height'], asset['images'], asset['deadly'])
                 all_sprites.add(sprite)
             else:
-                sprite = StaticBlock (x, y + dy, obj['width'], obj['height'], asset['images'], asset['deadly'])
+                sprite = StaticBlock(x, y + dy, obj['width'], obj['height'], asset['images'], asset['deadly'])
                 all_sprites.add(sprite)
         return all_sprites
 
@@ -288,6 +288,7 @@ class World:
         connected_list = self.find_horizontally_connected(vertically_connected)
         return connected_list
 
+
 # >>>>>>>>>>>>>>>>> only for testing!!! todo remove
 if __name__ == '__main__':
     SCREENWIDTH = 1200
@@ -307,7 +308,7 @@ if __name__ == '__main__':
             if event.type == pygame.QUIT:
                 carryOn = False
         screen.fill((0, 0, 0))
-        world.move_world(-1,0)
+        world.move_world(-1, 0)
         sprites.update()
         sprites.draw(screen)
         pygame.display.flip()
