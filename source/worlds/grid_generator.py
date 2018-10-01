@@ -2,9 +2,21 @@ import argparse
 import os
 import pathlib
 import pickle
+from collections import OrderedDict
 
 import cv2
 import numpy as np
+
+cell_types = OrderedDict([
+    ("GROUND", {'color': (0, 0, 0), 'info': "black, for solid ground, where turtle can safely walk"}),
+    ("PLATFORM", {'color': (0, 255, 0), 'info': "green, for hanging platforms, where turtle can safely jump"}),
+    ("WATER", {'color': (255, 0, 0), 'info': "blue, for water, swimmable by turtle"}),
+    ("LOOT_CRATE", {'color': (19, 69, 139), 'info': "brown, for loot crates with snails and other edible things"}),
+    ("LAVA", {'color': (0, 0, 255), 'info': "red, for lava (where turtle dies)"}),
+    ("CHECKPOINT_GROUND", {'color': (0, 255, 255), 'info': "yellow, for places with checkpoints"}),
+    ("EMPTY_CELL", {'color': (255, 255, 255), 'info': "empty cell"}),
+    ("SPIKES", {'color': (0, 0, 128), 'info': "red, for spikes (where turtle dies)"})
+])
 
 
 class GridGenerator:
@@ -12,7 +24,7 @@ class GridGenerator:
     Generates grid like maps. Allows for generation of new, empty grids as well as loading existing grid and creating a game level info out of it.
     """
 
-    def __init__(self, cell_w=None, cell_h=None):
+    def __init__(self, cell_w=None, cell_h=None, cell_types=None):
         """
         Initializes the Grid Generator
         :param cell_w: width of a single cell in grid (in pixels)
@@ -23,16 +35,7 @@ class GridGenerator:
 
         self.world_root = 'world_instances'
 
-        # cell types and associated colours
-        self.cell_types = {
-            "GROUND": {'color': (0, 0, 0), 'info': "black, for solid ground, where turtle can safely walk"},
-            "PLATFORM": {'color': (0, 255, 0), 'info': "green, for hanging platforms, where turtle can safely jump"},
-            "WATER": {'color': (255, 0, 0), 'info': "blue, for water, swimmable by turtle"},
-            "LOOT_CRATE": {'color': (19, 69, 139), 'info': "brown, for loot crates with snails and other edible things"},
-            "DEADLY_GROUND": {'color': (0, 0, 255), 'info': "red, for deadly grounds (where turtle dies)"},
-            "CHECKPOINT_GROUND": {'color': (0, 255, 255), 'info': "yellow, for places with checkpoints"},
-            "EMPTY_CELL": {'color': (255, 255, 255), 'info': "empty cell"}
-        }
+        self.cell_types = cell_types
 
     def find_color_index(self, rgb_val: tuple):
         """
@@ -182,13 +185,13 @@ if __name__ == "__main__":
             if not all([args.rows, args.cols, args.w, args.h]):
                 raise Exception('All of parameters: --rows, --cols, --w, --h must be provided when --create is used!')
             else:
-                generator = GridGenerator(cell_w=args.w, cell_h=args.h)
+                generator = GridGenerator(cell_w=args.w, cell_h=args.h, cell_types=cell_types)
                 grid, grid_info = generator.create_empty_grid(rows=args.rows, cols=args.cols)
                 generator.save_world(args.world_name, grid, grid_info)
         elif args.update:
             if not args.grid_name:
                 raise Exception('When --update is used, a --grid_name must be provided!')
-            generator = GridGenerator()
+            generator = GridGenerator(cell_types=cell_types)
             grid, grid_info = generator.load_world(args.world_name, args.grid_name)
             updated_grid_info = generator.update_grid_info(grid, grid_info)
             generator.save_world(args.world_name, None, grid_info)

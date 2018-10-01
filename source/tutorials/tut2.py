@@ -117,7 +117,7 @@ all_coming_cars.add(car1)
 all_coming_cars.add(car2)
 all_coming_cars.add(car3)
 all_coming_cars.add(car4)
-
+print(all_sprites_list)
 # Allowing the user to close the window...
 carryOn = True
 clock = pygame.time.Clock()
