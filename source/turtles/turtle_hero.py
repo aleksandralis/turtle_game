@@ -1,5 +1,6 @@
 import pygame, random
 from enum import Enum
+import os
 import math
 class JumpStates(Enum):
     IDLE = 0
@@ -66,13 +67,14 @@ class Turtle(pygame.sprite.Sprite):
 
 class TurtleHero(Turtle):
     def __init__(self, type, size_coeff, name, position):
-        self.image_sheet = pygame.image.load('D:\\Users\\Ola\\PycharmProjects\\turtle_game\\source\\turtles\\sv_turtle_sheet.png').convert_alpha()
+        print(__file__)
+        self.image_sheet = pygame.image.load('sv_turtle_sheet.png').convert_alpha()
         super().__init__(type, size_coeff, name, position)
         self.ACC = 600
         self.TICK = 1 / 60.0
         self.SPEED_FAST = 300
         self.SPPED_SLOW = 150
-        self.is_jumping = JumpStates.IDLE# jumping state machine: 0 - no jumping, 1 - jump up, 2 - jump down
+        self.is_jumping = JumpStates.IDLE
         self.dist_to_jump = 0
         self.initial_y = 0
         self.jump_counter = 0
@@ -161,29 +163,32 @@ class TurtleHero(Turtle):
                 self.jump_counter = 0
                 print("end")
 
-    def update_anim_stop_rigth(self):
-        self.image = self.get_image(self.walk_r[1][0] * self.WIDTH, self.walk_r[1][1] * self.HEIGHT, self.WIDTH, self.HEIGHT)
+    def get_image_from_sprite_sheet(self, column, row):
+        return self.get_image(column * self.WIDTH, row * self.HEIGHT, self.WIDTH, self.HEIGHT)
+
+    def update_anim_stop_right(self):
+        self.image = self.get_image_from_sprite_sheet(self.walk_r[1][0], self.walk_r[1][1])
 
     def update_anim_stop_left(self):
-        self.image = self.get_image(self.walk_r[1][0] * self.WIDTH, self.walk_r[1][1] * self.HEIGHT, self.WIDTH, self.HEIGHT)
+        self.image = self.get_image_from_sprite_sheet(self.walk_r[1][0], self.walk_r[1][1])
         self.image = pygame.transform.flip(self.image, True, False)
 
     def update_anim_walk_right(self, iter):
         count = self.i_count // iter
-        self.image = self.get_image(self.walk_r[count][0] * self.WIDTH, self.walk_r[count][1] * self.HEIGHT, self.WIDTH, self.HEIGHT)
+        self.image = self.get_image_from_sprite_sheet(self.walk_r[count][0], self.walk_r[count][1])
         self.i_count = (self.i_count + 1) % len(self.walk_r * iter)
 
     def update_anim_walk_left(self, iter):
         count = self.i_count // iter
-        self.image = self.get_image(self.walk_r[count][0] * self.WIDTH, self.walk_r[count][1] * self.HEIGHT, self.WIDTH, self.HEIGHT)
+        self.image = self.get_image_from_sprite_sheet(self.walk_r[count][0], self.walk_r[count][1])
         self.image = pygame.transform.flip(self.image, True, False)
         self.i_count = (self.i_count + 1) % len(self.walk_r * iter)
 
     def update_hide_anim(self):
-        self.image = self.get_image(self.hide_anim[0] * self.WIDTH, self.hide_anim[1] * self.HEIGHT, self.WIDTH, self.HEIGHT)
+        self.image = self.get_image_from_sprite_sheet(self.hide_anim[0], self.hide_anim[1])
 
     def update_die_anim(self):
-        self.image = self.get_image(self.die_anim[0] * self.WIDTH, self.die_anim[1] * self.HEIGHT, self.WIDTH, self.HEIGHT)
+        self.image = self.get_image_from_sprite_sheet(self.die_anim[0], self.die_anim[1])
 
     def update_moving_animation(self):
         if self.speed_act > 0.01:
