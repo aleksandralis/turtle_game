@@ -18,6 +18,7 @@ clock = pygame.time.Clock()
 all_sprites_list = pygame.sprite.Group()
 all_sprites_list.add(playerTurtle)
 
+
 while carryOn:
     for event in pygame.event.get():
         keys2 = pygame.key.get_pressed()
@@ -40,7 +41,10 @@ while carryOn:
                 playerTurtle.init_move_fast_right()
             elif event.key == pygame.K_RCTRL and keys2[pygame.K_LEFT]:
                 playerTurtle.init_move_fast_left()
-
+            elif event.key == pygame.K_z:
+                playerTurtle.update_hide_anim()
+            elif event.key == pygame.K_x:
+                playerTurtle.update_die_anim()
         elif event.type == pygame.KEYUP:
             if event.key == pygame.K_RCTRL and keys2[pygame.K_RIGHT]:
                 playerTurtle.init_move_right()
@@ -60,11 +64,12 @@ while carryOn:
         playerTurtle.stop_move()
 
     all_sprites_list.update()
-    if playerTurtle.is_jumping != JumpStates.IDLE:
-        playerTurtle.jump(400, 800)
 
     if playerTurtle.speed_act != 0 or playerTurtle.speed_target != 0:
         playerTurtle.move()
+
+    if playerTurtle.is_jumping != JumpStates.IDLE:
+        playerTurtle.jump(400, 800)
     # Drawing on Screen
     screen.fill(GREEN)
     # Now let's draw all the sprites in one go. (For now we only have 1 sprite!)
