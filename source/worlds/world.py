@@ -1,7 +1,7 @@
-import cv2
 import os
 import pickle
 
+import cv2
 import numpy as np
 import pygame
 
@@ -30,8 +30,10 @@ class StaticBlock(pygame.sprite.Sprite):
         # gets image appropriate for the block and uses it as a block surface
         block_image = self.get_image(units_w, units_h, images)
         self.image = pygame.surfarray.make_surface(block_image)
-        self.rect = self.image.get_rect()
+        black = (0, 0, 0)
+        self.image.set_colorkey(black)  # adds transparent background by keying black paddings
 
+        self.rect = self.image.get_rect()
         self.set_position(x, y)
 
     def set_position(self, x, y):
@@ -77,7 +79,8 @@ class BottomBlock(StaticBlock):
 
             # repeat bottom block units_h - 1 times (because we already have one unit_h for top block)
             if units_h - 2 > 0:
-                bottom_img = np.concatenate([bottom_img] * (units_h - 1), axis=0)  # repeat image remaining unit_h - 2 times
+                bottom_img = np.concatenate([bottom_img] * (units_h - 1),
+                                            axis=0)  # repeat image remaining unit_h - 2 times
 
             # final top and bottom concat
             result_img = np.concatenate([result_img, bottom_img], axis=0)
@@ -92,11 +95,14 @@ class World:
     Class responsible for drawing world and populating it with static sprites.
     """
 
-    def __init__(self, grid_file_path, screen_w, screen_h, cell_types=cell_types):
+    def __init__(self, grid_file_path, assets_path, screen_w, screen_h, cell_types=cell_types):
         """
         Initializes world.
         :param grid_file_path: the pickle file, describing world (its size and objects matrix)
+        :param assets_path: path to the folder with assets
         """
+        self.lightskyblue = (240, 248, 255)
+        self.skyblue = (0, 191, 255)
         self.__screen_w = screen_w
         self.__screen_h = screen_h
 
@@ -113,7 +119,8 @@ class World:
 
         connected_objects = self.find_connected_components()
 
-        self.assets = self.load_assets('assets', [key for key in self.cell_type_ids.keys() if key is not 'EMPTY_CELL'])
+        self.assets = self.load_assets(assets_path,
+                                       [key for key in self.cell_type_ids.keys() if key is not 'EMPTY_CELL'])
 
         self.__sprites = self.make_sprites(connected_objects)
 
@@ -131,10 +138,64 @@ class World:
         """Returns a list of sprites of world obstacles"""
         return self.__sprites
 
+    def __fill_gradient(self, surface, color, gradient, rect=None, vertical=True, forward=True):
+        """
+        Fill a surface with a gradient pattern
+        Parameters:
+        color -> starting color
+        gradient -> final color
+        rect -> area to fill; default is surface's rect
+        vertical -> True=vertical; False=horizontal
+        forward -> True=forward; False=reverse
+
+        Pygame recipe: http://www.pygame.org/wiki/GradientCode
+        """
+        if rect is None: rect = surface.get_rect()
+        x1, x2 = rect.left, rect.right
+        y1, y2 = rect.top, rect.bottom
+        if vertical:
+            h = y2 - y1
+        else:
+            h = x2 - x1
+        if forward:
+            a, b = color, gradient
+        else:
+            b, a = color, gradient
+        rate = (
+            float(b[0] - a[0]) / h,
+            float(b[1] - a[1]) / h,
+            float(b[2] - a[2]) / h
+        )
+        fn_line = pygame.draw.line
+        if vertical:
+            for line in range(y1, y2):
+                color = (
+                    min(max(a[0] + (rate[0] * (line - y1)), 0), 255),
+                    min(max(a[1] + (rate[1] * (line - y1)), 0), 255),
+                    min(max(a[2] + (rate[2] * (line - y1)), 0), 255)
+                )
+                fn_line(surface, color, (x1, line), (x2, line))
+        else:
+            for col in range(x1, x2):
+                color = (
+                    min(max(a[0] + (rate[0] * (col - x1)), 0), 255),
+                    min(max(a[1] + (rate[1] * (col - x1)), 0), 255),
+                    min(max(a[2] + (rate[2] * (col - x1)), 0), 255)
+                )
+                fn_line(surface, color, (col, y1), (col, y2))
+
+    def update(self, screen):
+        """Calls update() and draw() methods on sprites. A function made only for convenience. Also fills background with gradient.
+        :param screen: screen surface
+        """
+        self.__fill_gradient(screen, self.skyblue, self.lightskyblue)
+        self.__sprites.update()
+        self.__sprites.draw(screen)
+
     def load_assets(self, path, cell_names):
         """
         Loads assets for cell types, based on names; assigning additional information to them. Each asset must be named according to rules:
-        NAME-MODE-FEATURE1-FEATURE2-FEATUREn.png. Also does all neccessary preprocessing, like resizing etc.
+        NAME-MODE-FEATURE1-FEATURE2-FEATUREn.png. Also does all necessary preprocessing, like resizing etc.
 
         NAME - specifies the name of type, like ground, deadly ground etc.
         MODE - TOP / BOTTOM, specifies type of block (for example top block of grass and bottom block of dirt), all blocks must have at least their top version
@@ -160,7 +221,7 @@ class World:
             images = {}
             for asset_name in associated_filenames:
                 # preprocess image (load, scale, bgr to rgb color conversion)
-                img = cv2.imread(os.path.join(path, asset_name))
+                img = cv2.imread(os.path.join(path, asset_name), cv2.IMREAD_UNCHANGED)
                 img = cv2.resize(img, (self.__cell_w, self.__cell_h))
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
@@ -229,11 +290,13 @@ class World:
 
                     # find out, where does the current sequence of objects ends
                     while runner_fast < len(col):
-                        if col[runner_fast] != current_type:  # stop looking for current object, when you find cell of different type
+                        if col[
+                            runner_fast] != current_type:  # stop looking for current object, when you find cell of different type
                             break
                         runner_fast += 1
 
-                    column_objects.append({'type': self.cell_types[current_type], 'y': runner_slow, 'x': c, 'height': runner_fast - runner_slow})
+                    column_objects.append({'type': self.cell_types[current_type], 'y': runner_slow, 'x': c,
+                                           'height': runner_fast - runner_slow})
                     runner_slow = runner_fast
 
             vertical_objects.append(column_objects)
@@ -270,10 +333,12 @@ class World:
 
             # cleaning the temporary list, if it's not empty
             if temporary_objects:
-                inactive_objects = [obj for obj in temporary_objects if obj['x'] + obj['width'] < x + 1]  # these objects are already finished
+                inactive_objects = [obj for obj in temporary_objects if
+                                    obj['x'] + obj['width'] < x + 1]  # these objects are already finished
                 connected_objects.extend(inactive_objects)
 
-                temporary_objects = [obj for obj in temporary_objects if obj not in inactive_objects]  # these objects are still active
+                temporary_objects = [obj for obj in temporary_objects if
+                                     obj not in inactive_objects]  # these objects are still active
 
         # move last object from temporary list to list of connected objects
         connected_objects.extend(temporary_objects)
@@ -289,12 +354,12 @@ class World:
         return connected_list
 
 
-# >>>>>>>>>>>>>>>>> only for testing!!! todo remove
+# >>>>>>>>>>>>>>>>> only for testing!!!
 if __name__ == '__main__':
     SCREENWIDTH = 1200
     SCREENHEIGHT = 750
 
-    world = World('world_instances/world_1/grid_info.p', SCREENWIDTH, SCREENHEIGHT)
+    world = World('world_instances/world_1/grid_info.p', 'assets', SCREENWIDTH, SCREENHEIGHT)
     sprites = world.get_sprites()
 
     size = (SCREENWIDTH, SCREENHEIGHT)

@@ -68,7 +68,7 @@ class Turtle(pygame.sprite.Sprite):
 class TurtleHero(Turtle):
     def __init__(self, type, size_coeff, name, position):
         print(__file__)
-        self.image_sheet = pygame.image.load('sv_turtle_sheet.png').convert_alpha()
+        self.image_sheet = pygame.image.load('source/turtles/sv_turtle_sheet.png').convert_alpha()
         super().__init__(type, size_coeff, name, position)
         self.ACC = 600
         self.TICK = 1 / 60.0
@@ -144,7 +144,7 @@ class TurtleHero(Turtle):
     def jump(self, initial_v, grav_acc):
         if self.is_jumping == JumpStates.UP:
             self.rect.y = self.initial_y - initial_v * (self.jump_counter * self.TICK) + grav_acc * (self.jump_counter * self.TICK) ** 2 / 2
-            print(self.rect.y)
+            # print(self.rect.y)
             self.jump_counter = self.jump_counter + 1
             if self.initial_y - self.rect.y >= self.dist_to_jump:
                 self.is_jumping = JumpStates.DOWN
@@ -153,7 +153,7 @@ class TurtleHero(Turtle):
                 self.rect.y = self.initial_y - self.dist_to_jump
         elif self.initial_y >= self.rect.y and self.is_jumping == JumpStates.DOWN:
             self.rect.y = self.initial_y - self.dist_to_jump + grav_acc * (self.jump_counter * self.TICK) ** 2 / 2
-            print(self.rect.y)
+            # print(self.rect.y)
             self.jump_counter = self.jump_counter + 1
             if self.initial_y <= self.rect.y:
                 self.is_jumping = JumpStates.IDLE
@@ -161,7 +161,7 @@ class TurtleHero(Turtle):
                 self.rect.y = self.initial_y
                 self.initial_y = 0
                 self.jump_counter = 0
-                print("end")
+                # print("end")
 
     def get_image_from_sprite_sheet(self, column, row):
         return self.get_image(column * self.WIDTH, row * self.HEIGHT, self.WIDTH, self.HEIGHT)
@@ -201,11 +201,11 @@ class TurtleHero(Turtle):
             self.right = 0
             if self.speed_target == self.SPEED_FAST * (-1):
                 self.update_anim_walk_left(2)
-                print("update 2 left")
+                # print("update 2 left")
             else:
                 self.update_anim_walk_left(6)
-                print("update 6 left")
+                # print("update 6 left")
         elif self.right:
-            self.update_anim_stop_rigth()
+            self.update_anim_stop_right()
         else:
             self.update_anim_stop_left()
