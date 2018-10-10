@@ -86,6 +86,7 @@ while carryOn:
     # Drawing on Screen
     # world.move_world(-1, 0)
     world.update(screen)
+    world.find_collisions(playerTurtle)
 
     # Now let's draw all the sprites in one go. (For now we only have 1 sprite!)
     all_sprites_list.draw(screen)

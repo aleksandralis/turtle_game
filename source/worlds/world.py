@@ -29,12 +29,23 @@ class StaticBlock(pygame.sprite.Sprite):
 
         # gets image appropriate for the block and uses it as a block surface
         block_image = self.get_image(units_w, units_h, images)
-        self.image = pygame.surfarray.make_surface(block_image)
+        self.image = pygame.surfarray.make_surface(block_image[:, :, :3])  # use only rgb channels
         black = (0, 0, 0)
         self.image.set_colorkey(black)  # adds transparent background by keying black paddings
 
         self.rect = self.image.get_rect()
         self.set_position(x, y)
+
+    def get_coordinates(self):
+        """
+        Returns xmin, ymin, xmax, ymax coordinates of the block.
+        :return: (xmin, ymin, xmax, ymax)
+        """
+        xmin = self.rect.x
+        ymin = self.rect.y
+        xmax = xmin + self.rect.width
+        ymax = xmin + self.rect.height
+        return (xmin, ymin, xmax, ymax)
 
     def set_position(self, x, y):
         """
@@ -58,6 +69,32 @@ class StaticBlock(pygame.sprite.Sprite):
         """
         self.rect.x += dx
         self.rect.y += dy
+
+
+class MaskableBlock(StaticBlock):
+    """
+    A class defining maskable blocks. They size is adjusted, based on their masks.
+    """
+
+    def __init__(self, x, y, units_w, units_h, images, is_deadly):
+        super().__init__(x, y, units_w, units_h, images, is_deadly)
+
+    def get_image(self, units_w, units_h, images):
+        """
+        Finds mask for maskable blocks (it should be stored in the 4th, alpha dimension of image) and based on it it computes the actual size of sprite.
+        """
+        # idk why, but normal images are rotated 90deg in pygame, so we need to reverse this process
+        image = np.rot90(images['top_img'], 1)
+
+        # find mask bounding box and cut RGB image with it
+        mask_points = cv2.findNonZero(image[:, :, -1])
+        bbox = cv2.boundingRect(mask_points)  # bounding box in the form: x, y, w, h
+        xmin = bbox[0]
+        ymin = bbox[1]
+        xmax = bbox[2] + xmin
+        ymax = bbox[3] + ymin
+        image = image[ymin:ymax, xmin:xmax, :]
+        return image
 
 
 class BottomBlock(StaticBlock):
@@ -223,7 +260,7 @@ class World:
                 # preprocess image (load, scale, bgr to rgb color conversion)
                 img = cv2.imread(os.path.join(path, asset_name), cv2.IMREAD_UNCHANGED)
                 img = cv2.resize(img, (self.__cell_w, self.__cell_h))
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGBA)
 
                 if 'top' in asset_name:
                     images['top_img'] = img
@@ -255,6 +292,9 @@ class World:
             # if bottom-expandable asset
             if 'bottom_img' in asset['images'].keys():
                 sprite = BottomBlock(x, y + dy, obj['width'], obj['height'], asset['images'], asset['deadly'])
+                all_sprites.add(sprite)
+            elif asset['maskable'] == True:
+                sprite = MaskableBlock(x, y + dy, obj['width'], obj['height'], asset['images'], asset['deadly'])
                 all_sprites.add(sprite)
             else:
                 sprite = StaticBlock(x, y + dy, obj['width'], obj['height'], asset['images'], asset['deadly'])
@@ -290,8 +330,7 @@ class World:
 
                     # find out, where does the current sequence of objects ends
                     while runner_fast < len(col):
-                        if col[
-                            runner_fast] != current_type:  # stop looking for current object, when you find cell of different type
+                        if col[runner_fast] != current_type:  # stop looking for current object, when you find cell of different type
                             break
                         runner_fast += 1
 
@@ -352,6 +391,18 @@ class World:
         vertically_connected = self.find_vertically_connected(self.__obj_matrix, self.cell_type_ids['EMPTY_CELL'])
         connected_list = self.find_horizontally_connected(vertically_connected)
         return connected_list
+
+    def find_collisions(self, player):
+        """
+        Finds collisions between player sprite and world sprites
+        """
+        # todo this is probably temporary and will be moved somewhere else (probably into separate class designed for game logic
+        colliding_obstacles = pygame.sprite.spritecollide(player, self.__sprites, False)
+        if colliding_obstacles:
+            for obj in colliding_obstacles:
+                print("Player colliding with {}, which has coords (xmin, ymin, xmax, ymax):{} and is {} deadly".format(obj.__class__.__name__,
+                                                                                                                       obj.get_coordinates(),
+                                                                                                                       '' if obj.is_deadly else 'NOT'))
 
 
 # >>>>>>>>>>>>>>>>> only for testing!!!
