@@ -7,15 +7,12 @@ SCREENWIDTH = 1200
 SCREENHEIGHT = 750
 GREEN = (20, 255, 140)
 
-
-
-
 size = (SCREENWIDTH, SCREENHEIGHT)
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption("Turtle Game")
 
 # create turtle
-playerTurtle = TurtleHero("normal", 0.5, "Karol1", (200, 200))
+playerTurtle = TurtleHero("normal", 0.5, "Karol1", (100, 600))
 
 # create world
 world = World('source/worlds/world_instances/world_1/grid_info.p', 'source/worlds/assets', SCREENWIDTH, SCREENHEIGHT)
@@ -28,6 +25,15 @@ clock = pygame.time.Clock()
 
 all_sprites_list = pygame.sprite.Group()
 all_sprites_list.add(playerTurtle)
+
+# current turtle position
+turtle_x = playerTurtle.x
+turtle_y = playerTurtle.y
+# difference between current and previous turtle position
+delta_x = 0
+delta_y = 0
+# minimal increment
+min_delta = 0.1
 
 while carryOn:
     for event in pygame.event.get():
@@ -76,16 +82,22 @@ while carryOn:
     all_sprites_list.update()
 
     if playerTurtle.speed_act != 0 or playerTurtle.speed_target != 0:
-        print("move x: " + str(playerTurtle.move()))
+        new_x = playerTurtle.move()
+        delta_x = -int(new_x - turtle_x) if abs(new_x - turtle_x) >= min_delta else 0
+        turtle_x = new_x
 
     if playerTurtle.is_jumping != JumpStates.IDLE:
-        print("jump y: " + str(playerTurtle.jump(400, 800)))
-
+        new_y = playerTurtle.jump(400, 800)
+        delta_y = -int(new_y - turtle_y) if abs(new_y - turtle_y) >= min_delta else 0
+        turtle_y = new_y
+    else:
+        delta_y = 0
 
 
     # Drawing on Screen
-    # world.move_world(-1, 0)
+    world.move_world(delta_x, delta_y)
     world.update(screen)
+    world.find_collisions(playerTurtle)
 
     # Now let's draw all the sprites in one go. (For now we only have 1 sprite!)
     all_sprites_list.draw(screen)
