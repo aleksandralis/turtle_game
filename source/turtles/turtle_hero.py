@@ -45,9 +45,12 @@ class Turtle(pygame.sprite.Sprite):
 
         # Fetch the rectangle object that has the dimensions of the image and set position.
         self.rect = self.image.get_rect()
-        self.rect.x = float(position[0])
+        self.rect.x = float(position[0]) # assigned as a real position on the user screen
         self.tmp_x_float = float(position[0])
-        self.rect.y = position[1]
+        self.rect.y = position[1] # assigned as a real position on the user screen
+        self.x = self.rect.x # used to move the world leaving turtle i rect.x i rect.y on the user screen
+        self.y = self.rect.y
+        ####
 
     def get_image(self, x, y, w, h):
         raise NotImplementedError
@@ -126,42 +129,42 @@ class TurtleHero(Turtle):
 
     def move(self):
         if self.speed_target == round(self.speed_act, 1):  # constant motion
-            self.tmp_x_float = self.rect.x + self.speed_target * (self.TICK)
-            self.rect.x = self.tmp_x_float + 0.5
+            self.tmp_x_float = self.speed_target * (self.TICK)
         elif self.speed_target > self.speed_act:  # uniformly accelerated motion
-            self.tmp_x_float = self.rect.x + self.speed_act * (self.TICK) + self.ACC * (self.TICK) ** 2 / 2
+            self.tmp_x_float = self.speed_act * (self.TICK) + self.ACC * (self.TICK) ** 2 / 2
             self.speed_act = self.speed_act + self.ACC * (self.TICK)
-            self.rect.x = self.tmp_x_float + 0.5
         elif self.speed_target < self.speed_act:  # uniformly deccelerated motion
-            self.tmp_x_float = self.rect.x + self.speed_act * (self.TICK) - self.ACC * (self.TICK) ** 2 / 2
+            self.tmp_x_float = self.speed_act * (self.TICK) - self.ACC * (self.TICK) ** 2 / 2
             self.speed_act = self.speed_act - self.ACC * (self.TICK)
-            self.rect.x = self.tmp_x_float + 0.5
+        self.x = self.x + self.tmp_x_float
         if self.speed_act < 0.01 and self.speed_act > -0.01:  # if zero (precision 0.1) - stop entirely
             self.speed_act = 0.0
         self.update_moving_animation()
         # print("actual " + str(self.speed_act), "target " + str(self.speed_target))
+        return self.x
 
     def jump(self, initial_v, grav_acc):
         if self.is_jumping == JumpStates.UP:
-            self.rect.y = self.initial_y - initial_v * (self.jump_counter * self.TICK) + grav_acc * (self.jump_counter * self.TICK) ** 2 / 2
+            self.y = self.initial_y - initial_v * (self.jump_counter * self.TICK) + grav_acc * (self.jump_counter * self.TICK) ** 2 / 2
             # print(self.rect.y)
             self.jump_counter = self.jump_counter + 1
-            if self.initial_y - self.rect.y >= self.dist_to_jump:
+            if self.initial_y - self.y >= self.dist_to_jump:
                 self.is_jumping = JumpStates.DOWN
                 self.jump_counter = 1
-                print("down")
-                self.rect.y = self.initial_y - self.dist_to_jump
-        elif self.initial_y >= self.rect.y and self.is_jumping == JumpStates.DOWN:
-            self.rect.y = self.initial_y - self.dist_to_jump + grav_acc * (self.jump_counter * self.TICK) ** 2 / 2
+                # print("down")
+                self.y = self.initial_y - self.dist_to_jump
+        elif self.initial_y >= self.y and self.is_jumping == JumpStates.DOWN:
+            self.y = self.initial_y - self.dist_to_jump + grav_acc * (self.jump_counter * self.TICK) ** 2 / 2
             # print(self.rect.y)
             self.jump_counter = self.jump_counter + 1
-            if self.initial_y <= self.rect.y:
+            if self.initial_y <= self.y:
                 self.is_jumping = JumpStates.IDLE
                 self.dist_to_jump = 0
-                self.rect.y = self.initial_y
+                self.y = self.initial_y
                 self.initial_y = 0
                 self.jump_counter = 0
                 # print("end")
+        return self.y
 
     def get_image_from_sprite_sheet(self, column, row):
         return self.get_image(column * self.WIDTH, row * self.HEIGHT, self.WIDTH, self.HEIGHT)
