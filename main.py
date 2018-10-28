@@ -80,11 +80,23 @@ while carryOn:
         playerTurtle.stop_move()
 
     all_sprites_list.update()
-
+    #print(playerTurtle.rect.bottomright)
     if playerTurtle.speed_act != 0 or playerTurtle.speed_target != 0:
         new_x = playerTurtle.move()
         delta_x = -int(new_x - turtle_x) if abs(new_x - turtle_x) >= min_delta else 0
-        turtle_x = new_x
+        world.move_world(delta_x, 0)
+        new_delta = world.find_collisions_x(playerTurtle, delta_x)
+        delta_x_prim = 0
+        if new_delta != delta_x:
+            playerTurtle.x = turtle_x - new_delta
+            new_x = playerTurtle.x
+            delta_x_prim = -int(new_x - turtle_x) if abs(new_x - turtle_x) >= min_delta else 0
+            delta_x = delta_x_prim - delta_x
+        else:
+            delta_x = 0
+        turtle_x = playerTurtle.x
+    else:
+        delta_x = 0
 
     if playerTurtle.is_jumping != JumpStates.IDLE:
         new_y = playerTurtle.jump(400, 800)
@@ -93,11 +105,15 @@ while carryOn:
     else:
         delta_y = 0
 
-
     # Drawing on Screen
-    world.move_world(delta_x, delta_y)
+    #print(delta_x)
+    if delta_x != 0 or delta_y != 0:
+        world.move_world(delta_x, delta_y)
+
+
+
     world.update(screen)
-    world.find_collisions(playerTurtle)
+
 
     # Now let's draw all the sprites in one go. (For now we only have 1 sprite!)
     all_sprites_list.draw(screen)

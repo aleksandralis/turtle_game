@@ -35,7 +35,6 @@ class Turtle(pygame.sprite.Sprite):
         self.image = self.get_image(self.WIDTH * self.init_sub[0] , self.HEIGHT * self.init_sub[1], self.WIDTH, self.HEIGHT)
         # self.image.fill(self.WHITE)
         # self.image.set_colorkey(self.WHITE)
-
         self.size = size_coeff
         self.type = type
         # Draw the turtle (a rectangle!)
@@ -126,6 +125,9 @@ class TurtleHero(Turtle):
 
     def stop_move(self):
         self.speed_target = 0
+
+    def stop_immediately(self):
+        self.speed_target = self.speed_act = 0
 
     def move(self):
         if self.speed_target == round(self.speed_act, 1):  # constant motion

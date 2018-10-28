@@ -392,17 +392,26 @@ class World:
         connected_list = self.find_horizontally_connected(vertically_connected)
         return connected_list
 
-    def find_collisions(self, player):
+    def find_collisions_x(self, player, delta_x):
         """
         Finds collisions between player sprite and world sprites
         """
         # todo this is probably temporary and will be moved somewhere else (probably into separate class designed for game logic
+        new_delta = delta_x
         colliding_obstacles = pygame.sprite.spritecollide(player, self.__sprites, False)
         if colliding_obstacles:
             for obj in colliding_obstacles:
+                if delta_x < 0:
+                    x_min = obj.get_coordinates()[0]
+                    new_delta = -int(x_min - player.rect.bottomright[0]) if abs(x_min - player.rect.bottomright[0]) >= 0.1 else 0
+                elif delta_x > 0:
+                    x_max = obj.get_coordinates()[2]
+                    new_delta = -int(x_max - player.rect.bottomleft[0]) if abs(x_max - player.rect.bottomleft[0]) >= 0.1 else 0
+
                 print("Player colliding with {}, which has coords (xmin, ymin, xmax, ymax):{} and is {} deadly".format(obj.__class__.__name__,
-                                                                                                                       obj.get_coordinates(),
+                                                                                                                      obj.get_coordinates(),
                                                                                                                        '' if obj.is_deadly else 'NOT'))
+        return new_delta
 
 
 # >>>>>>>>>>>>>>>>> only for testing!!!
