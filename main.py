@@ -76,10 +76,10 @@ while carryOn:
     all_sprites_list.update()
 
     if playerTurtle.speed_act != 0 or playerTurtle.speed_target != 0:
-        playerTurtle.move()
+        print("move x: " + str(playerTurtle.move()))
 
     if playerTurtle.is_jumping != JumpStates.IDLE:
-        playerTurtle.jump(400, 800)
+        print("jump y: " + str(playerTurtle.jump(400, 800)))
 
 
 
