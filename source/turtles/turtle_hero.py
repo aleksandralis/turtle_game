@@ -6,6 +6,7 @@ class JumpStates(Enum):
     IDLE = 0
     UP = 1
     DOWN = 2
+    FALL = 3
 
 class Turtle(pygame.sprite.Sprite):
     # This class represents a turtle. It derives from the "Sprite" class in Pygame.
@@ -104,6 +105,14 @@ class TurtleHero(Turtle):
         self.initial_y = self.rect.y
         self.jump_counter = self.jump_counter + 1
 
+    def init_fall(self):
+        self.is_jumping = JumpStates.FALL
+        self.dist_to_jump = 0
+        print("init jump")
+        print(self.dist_to_jump)
+        self.initial_y = self.rect.y
+        self.jump_counter = self.jump_counter + 1
+
     def changeSpeed(self, speed):
         self.speed = speed
 
@@ -166,7 +175,12 @@ class TurtleHero(Turtle):
                 self.initial_y = 0
                 self.jump_counter = 0
                 # print("end")
+        elif self.is_jumping == JumpStates.FALL:
+            self.y = self.initial_y - self.dist_to_jump + grav_acc * (self.jump_counter * self.TICK) ** 2 / 2
+            # print(self.rect.y)
+            self.jump_counter = self.jump_counter + 1
         return self.y
+
 
     def get_image_from_sprite_sheet(self, column, row):
         return self.get_image(column * self.WIDTH, row * self.HEIGHT, self.WIDTH, self.HEIGHT)
