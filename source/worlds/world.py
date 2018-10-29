@@ -397,20 +397,22 @@ class World:
         Finds collisions between player sprite and world sprites
         """
         # todo this is probably temporary and will be moved somewhere else (probably into separate class designed for game logic
-        new_delta = delta_x
+        new_delta = 0
         colliding_obstacles = pygame.sprite.spritecollide(player, self.__sprites, False)
         if colliding_obstacles:
             for obj in colliding_obstacles:
                 if delta_x < 0:
                     x_min = obj.get_coordinates()[0]
-                    new_delta = -int(x_min - player.rect.bottomright[0]) if abs(x_min - player.rect.bottomright[0]) >= 0.1 else 0
+                    if player.rect.bottomright[0] > x_min:
+                        new_delta = player.rect.bottomright[0] - x_min
                 elif delta_x > 0:
                     x_max = obj.get_coordinates()[2]
-                    new_delta = -int(x_max - player.rect.bottomleft[0]) if abs(x_max - player.rect.bottomleft[0]) >= 0.1 else 0
+                    if player.rect.bottomleft[0] < x_max:
+                        new_delta = player.rect.bottomleft[0] - x_max
 
                 print("Player colliding with {}, which has coords (xmin, ymin, xmax, ymax):{} and is {} deadly".format(obj.__class__.__name__,
                                                                                                                       obj.get_coordinates(),
-                                                                                                                       '' if obj.is_deadly else 'NOT'))
+                                                                                                                    '' if obj.is_deadly else 'NOT'))
         return new_delta
 
 

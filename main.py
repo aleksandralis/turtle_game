@@ -85,19 +85,10 @@ while carryOn:
         new_x = playerTurtle.move()
         delta_x = -int(new_x - turtle_x) if abs(new_x - turtle_x) >= min_delta else 0
         world.move_world(delta_x, 0)
-        new_delta = world.find_collisions_x(playerTurtle, delta_x)
-        delta_x_prim = 0
-        if new_delta != delta_x:
-            playerTurtle.x = turtle_x - new_delta
-            new_x = playerTurtle.x
-            delta_x_prim = -int(new_x - turtle_x) if abs(new_x - turtle_x) >= min_delta else 0
-            delta_x = delta_x_prim - delta_x
-        else:
-            delta_x = 0
+        delta_x = world.find_collisions_x(playerTurtle, delta_x)
+        print(delta_x)
+        playerTurtle.x = playerTurtle.x + delta_x
         turtle_x = playerTurtle.x
-    else:
-        delta_x = 0
-
     if playerTurtle.is_jumping != JumpStates.IDLE:
         new_y = playerTurtle.jump(400, 800)
         delta_y = -int(new_y - turtle_y) if abs(new_y - turtle_y) >= min_delta else 0
