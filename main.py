@@ -42,7 +42,7 @@ while carryOn:
             carryOn = False
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE and playerTurtle.is_jumping == JumpStates.IDLE:
-                playerTurtle.init_fall()
+                playerTurtle.init_jump(400, 800)
             if event.key == pygame.K_RIGHT and not keys2[pygame.K_RCTRL]:
                 # print("init right !!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 playerTurtle.init_move_right()
@@ -84,7 +84,7 @@ while carryOn:
     if playerTurtle.speed_act != 0 or playerTurtle.speed_target != 0:
         new_x = playerTurtle.move()
         delta_x = -int(new_x - turtle_x) if abs(new_x - turtle_x) >= min_delta else 0
-        world.move_world(delta_x, 0)
+        world.move_world(delta_x,0)
         delta_x = world.find_collisions_x(playerTurtle, delta_x)
         print(delta_x)
         playerTurtle.x = playerTurtle.x + delta_x
@@ -97,6 +97,10 @@ while carryOn:
         turtle_y = new_y
     else:
         delta_y = 0
+
+    if playerTurtle.is_jumping == JumpStates.FALL and world.is_collision_floor_y(playerTurtle):
+        playerTurtle.stop_jump()
+
 
     # Drawing on Screen
     #print(delta_x)

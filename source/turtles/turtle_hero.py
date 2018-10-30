@@ -102,16 +102,16 @@ class TurtleHero(Turtle):
         self.dist_to_jump = (initial_v) ** 2 / (2 * grav_acc)
         print("init jump")
         print(self.dist_to_jump)
-        self.initial_y = self.rect.y
+        self.initial_y = self.y
         self.jump_counter = self.jump_counter + 1
 
     def init_fall(self):
         self.is_jumping = JumpStates.FALL
         self.dist_to_jump = 0
-        print("init jump")
+        print("init fall")
         print(self.dist_to_jump)
-        self.initial_y = self.rect.y
-        self.jump_counter = self.jump_counter + 1
+        self.initial_y = self.y
+        self.jump_counter = 0
 
     def changeSpeed(self, speed):
         self.speed = speed
@@ -160,7 +160,7 @@ class TurtleHero(Turtle):
             # print(self.rect.y)
             self.jump_counter = self.jump_counter + 1
             if self.initial_y - self.y >= self.dist_to_jump:
-                self.is_jumping = JumpStates.DOWN
+                self.is_jumping = JumpStates.FALL
                 self.jump_counter = 1
                 # print("down")
                 self.y = self.initial_y - self.dist_to_jump
@@ -181,6 +181,11 @@ class TurtleHero(Turtle):
             self.jump_counter = self.jump_counter + 1
         return self.y
 
+    def stop_jump(self):
+        self.is_jumping = JumpStates.IDLE
+        self.dist_to_jump = 0
+        self.initial_y = 0
+        self.jump_counter = 0
 
     def get_image_from_sprite_sheet(self, column, row):
         return self.get_image(column * self.WIDTH, row * self.HEIGHT, self.WIDTH, self.HEIGHT)

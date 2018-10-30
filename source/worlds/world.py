@@ -160,6 +160,7 @@ class World:
                                        [key for key in self.cell_type_ids.keys() if key is not 'EMPTY_CELL'])
 
         self.__sprites = self.make_sprites(connected_objects)
+        self.coll_y = 0
 
     def move_world(self, dx, dy):
         """Moves world by dx and dy pixels"""
@@ -392,7 +393,7 @@ class World:
         connected_list = self.find_horizontally_connected(vertically_connected)
         return connected_list
 
-    def find_collisions_x(self, player, delta_x, delta_y):
+    def find_collisions_x(self, player, delta_x):
         """
         Finds collisions between player sprite and world sprites
         """
@@ -402,11 +403,11 @@ class World:
         colliding_obstacles = pygame.sprite.spritecollide(player, self.__sprites, False)
         if colliding_obstacles:
             for obj in colliding_obstacles:
-                if delta_x < 0:
+                if delta_x < 0 and obj.get_coordinates()[1] != self.coll_y:
                     x_min = obj.get_coordinates()[0]
                     if player.rect.bottomright[0] > x_min:
                         new_delta = player.rect.bottomright[0] - x_min
-                elif delta_x > 0:
+                elif delta_x > 0 and obj.get_coordinates()[1] != self.coll_y:
                     x_max = obj.get_coordinates()[2]
                     if player.rect.bottomleft[0] < x_max:
                         new_delta = player.rect.bottomleft[0] - x_max
@@ -420,12 +421,15 @@ class World:
         if colliding_obstacles:
             for obj in colliding_obstacles:
                 if obj.get_coordinates()[2] > player.rect.bottomright[0] > obj.get_coordinates()[0] and player.rect.bottomright[1] > obj.get_coordinates()[1]:
-                    print("colision 1")
+                    #print("colision 1")
+                    self.coll_y = obj.get_coordinates()[1]
                     return True
                 elif obj.get_coordinates()[2] > player.rect.bottomleft[0] > obj.get_coordinates()[0] and player.rect.bottomleft[1] > obj.get_coordinates()[1]:
-                    print("colision 2")
+                    #print("colision 2")
+                    self.coll_y = obj.get_coordinates()[1]
                     return True
                 else:
+                    self.coll_y = 0
                     return False
 # >>>>>>>>>>>>>>>>> only for testing!!!
 if __name__ == '__main__':
