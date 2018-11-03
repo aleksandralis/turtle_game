@@ -403,14 +403,12 @@ class World:
         colliding_obstacles = pygame.sprite.spritecollide(player, self.__sprites, False)
         if colliding_obstacles:
             for obj in colliding_obstacles:
-                if delta_x < 0 and obj.get_coordinates()[1] != self.coll_y:
-                    x_min = obj.get_coordinates()[0]
-                    if player.rect.bottomright[0] > x_min:
-                        new_delta = player.rect.bottomright[0] - x_min
-                elif delta_x > 0 and obj.get_coordinates()[1] != self.coll_y:
-                    x_max = obj.get_coordinates()[2]
-                    if player.rect.bottomleft[0] < x_max:
-                        new_delta = player.rect.bottomleft[0] - x_max
+                print("obj - delta x", obj.get_coordinates()[0] - delta_x, " player x: ", player.rect.bottomright[0])
+                if delta_x < 0 and player.rect.bottomright[0] >= obj.get_coordinates()[0] and player.rect.bottomright[0] <= obj.get_coordinates()[0] - delta_x:
+                    new_delta = player.rect.bottomright[0] - obj.get_coordinates()[0]
+                elif delta_x > 0 and player.rect.bottomleft[0] <= obj.get_coordinates()[2] and player.rect.bottomleft[0] >= obj.get_coordinates()[2] - delta_x:
+                    new_delta = player.rect.bottomleft[0] - obj.get_coordinates()[2]
+                print("obj y: ", obj.get_coordinates()[1], " self colly: ",self.coll_y, " new delta: ", new_delta)
                 print("Player colliding with {}, which has coords (xmin, ymin, xmax, ymax):{} and is {} deadly".format(obj.__class__.__name__,
                                                                                                                       obj.get_coordinates(),
                                                                                                                     '' if obj.is_deadly else 'NOT'))
